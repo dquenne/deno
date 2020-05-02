@@ -218,6 +218,20 @@ export async function readMatrix(
   }
 ): Promise<string[][]> {
   const result: string[][] = [];
+  for await (const lineResult of streamMatrix(reader, opt)) {
+    result.push(lineResult);
+  }
+  return result;
+}
+
+export async function* streamMatrix(
+  reader: BufReader,
+  opt: ReadOptions = {
+    comma: ",",
+    trimLeadingSpace: false,
+    lazyQuotes: false,
+  }
+): AsyncGenerator<string[], void> {
   let _nbFields: number | undefined;
   let lineResult: string[];
   let first = true;
@@ -246,10 +260,9 @@ export async function readMatrix(
       if (_nbFields && _nbFields !== lineResult.length) {
         throw new ParseError(lineIndex, lineIndex, ERR_FIELD_COUNT);
       }
-      result.push(lineResult);
+      yield lineResult;
     }
   }
-  return result;
 }
 
 /**
